@@ -1,3 +1,5 @@
+/* global FileSystem */
+
 module.exports = function init(global, jsUtil, cookieHandler, messages, base64, errorCodes, dependencyValidator, ponyfills) {
   var validSerializers = ['urlencoded', 'json', 'utf8', 'raw', 'multipart'];
   var validCertModes = ['default', 'nocheck', 'pinned', 'legacy'];
@@ -66,7 +68,7 @@ module.exports = function init(global, jsUtil, cookieHandler, messages, base64, 
     for (var i = 0; i < globalKeys.length; i++) {
       key = globalKeys[i];
 
-      if (!localHeaders.hasOwnProperty(key)) {
+      if (!Object.prototype.hasOwnProperty.call(localHeaders, key)) {
         localHeaders[key] = globalHeaders[key];
       }
     }
@@ -343,7 +345,10 @@ module.exports = function init(global, jsUtil, cookieHandler, messages, base64, 
 
   function injectFileEntryHandler(cb) {
     return function (response) {
-      cb(createFileEntry(response.file));
+      var fileEntry = createFileEntry(response.file);
+      response.file = fileEntry;
+      response.data = fileEntry;
+      cb(fileEntry, response);
     }
   }
 
@@ -358,7 +363,7 @@ module.exports = function init(global, jsUtil, cookieHandler, messages, base64, 
   }
 
   function getMatchingHostHeaders(url, headersList) {
-    var matches = url.match(/^https?\:\/\/([^\/?#]+)(?:[\/?#]|$)/i);
+    var matches = url.match(/^https?:\/\/([^/?#]+)(?:[/?#]|$)/i);
     var domain = matches && matches[1];
 
     return headersList[domain] || null;
@@ -505,7 +510,9 @@ module.exports = function init(global, jsUtil, cookieHandler, messages, base64, 
       params: checkParamsObject(options.params || {}),
       responseType: checkResponseType(options.responseType || validResponseTypes[0]),
       serializer: checkSerializer(options.serializer || globals.serializer),
-      timeout: checkTimeoutValue(options.timeout || globals.timeout),
+      connectTimeout: checkTimeoutValue(options.connectTimeout || globals.connectTimeout),
+      readTimeout: checkTimeoutValue(options.readTimeout || globals.readTimeout),
+      timeout: checkTimeoutValue(options.timeout || globals.timeout)
     };
   }
 };

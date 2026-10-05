@@ -3,10 +3,7 @@ Cordova Advanced HTTP
 [![npm version](https://img.shields.io/npm/v/cordova-plugin-advanced-http)](https://www.npmjs.com/package/cordova-plugin-advanced-http?activeTab=versions)
 [![MIT Licence](https://img.shields.io/badge/license-MIT-blue?style=flat)](https://opensource.org/licenses/mit-license.php)
 [![downloads/month](https://img.shields.io/npm/dm/cordova-plugin-advanced-http.svg)](https://www.npmjs.com/package/cordova-plugin-advanced-http)
-
-[![Travis Build Status](https://img.shields.io/travis/silkimen/cordova-plugin-advanced-http/master?label=Travis%20CI)](https://travis-ci.org/silkimen/cordova-plugin-advanced-http)
-[![GitHub Build Status](https://img.shields.io/github/workflow/status/silkimen/cordova-plugin-advanced-http/Cordova%20HTTP%20Plugin%20CI/master?label=GitHub%20Actions)](https://github.com/silkimen/cordova-plugin-advanced-http/actions)
-
+[![GitHub Build Status](https://img.shields.io/github/actions/workflow/status/silkimen/cordova-plugin-advanced-http/.github/workflows/ci.yml?branch=master)](https://github.com/silkimen/cordova-plugin-advanced-http/actions)
 
 Cordova / Phonegap plugin for communicating with HTTP servers.  Supports iOS, Android and [Browser](#browserSupport).
 
@@ -33,6 +30,19 @@ phonegap plugin add cordova-plugin-advanced-http
 
 cordova plugin add cordova-plugin-advanced-http
 ```
+
+### Plugin Preferences
+
+`AndroidBlacklistSecureSocketProtocols`: define a blacklist of secure socket protocols for Android. This preference allows you to disable protocols which are considered unsafe. You need to provide a comma-separated list of protocols ([check Android SSLSocket#protocols docu for protocol names](https://developer.android.com/reference/javax/net/ssl/SSLSocket#protocols)).
+
+e.g. blacklist `SSLv3` and `TLSv1`:
+```xml
+<preference name="AndroidBlacklistSecureSocketProtocols" value="SSLv3,TLSv1" />
+```
+
+## Currently known issues
+
+- [abort](#abort)ing sent requests is not working reliably
 
 ## Usage
 
@@ -115,10 +125,24 @@ This defaults to `urlencoded`. You can also override the default content type he
 :warning: `multipart` depends on several Web API standards which need to be supported in your web view. Check out https://github.com/silkimen/cordova-plugin-advanced-http/wiki/Web-APIs-required-for-Multipart-requests for more info.
 
 ### setRequestTimeout
-Set the "read" timeout in seconds. This is the timeout interval to use when waiting for additional data.
-
+Set how long to wait for a request to respond, in seconds.
+For Android, this will set both [connectTimeout](https://developer.android.com/reference/java/net/URLConnection#getConnectTimeout()) and [readTimeout](https://developer.android.com/reference/java/net/URLConnection#setReadTimeout(int)).
+For iOS, this will set [timeout interval](https://developer.apple.com/documentation/foundation/nsmutableurlrequest/1414063-timeoutinterval).
+For browser platform, this will set [timeout](https://developer.mozilla.org/fr/docs/Web/API/XMLHttpRequest/timeout).
 ```js
 cordova.plugin.http.setRequestTimeout(5.0);
+```
+
+### setConnectTimeout (Android Only)
+Set connect timeout for Android
+```js
+cordova.plugin.http.setRequestTimeout(5.0);
+```
+
+### setReadTimeout (Android Only)
+Set read timeout for Android
+```js
+cordova.plugin.http.setReadTimeout(5.0);
 ```
 
 ### setFollowRedirect<a name="setFollowRedirect"></a>
@@ -136,7 +160,7 @@ cordova.plugin.http.getCookieString(url);
 ```
 
 ### setCookie
-Add a custom cookie. Takes a URL, a cookie string and an options object. See [ToughCookie documentation](https://github.com/salesforce/tough-cookie#setcookiecookieorstring-currenturl-options-cberrcookie) for allowed options.
+Add a custom cookie. Takes a URL, a cookie string and an options object. See [ToughCookie documentation](https://github.com/salesforce/tough-cookie#setcookiecookieorstring-currenturl-options-cberrcookie) for allowed options. Cookie will persist until removed with [removeCookies](#removecookies) or [clearCookies](#clearcookies).
 
 ```js
 cordova.plugin.http.setCookie(url, cookie, options);
@@ -387,21 +411,32 @@ cordova.plugin.http.uploadFile("https://google.com/", {
 ```
 
 ### downloadFile<a name="downloadFile"></a>
-Downloads a file and saves it to the device.  Takes a URL, parameters, headers, and a filePath.  See [post](#post) documentation for details on what is returned on failure.  On success this function returns a cordova [FileEntry object](http://cordova.apache.org/docs/en/3.3.0/cordova_file_file.md.html#FileEntry).
+Downloads a file and saves it to the device.  Takes a URL, parameters, headers, and a filePath.  See [post](#post) documentation for details on what is returned on failure.  On success this function returns a cordova [FileEntry object](http://cordova.apache.org/docs/en/3.3.0/cordova_file_file.md.html#FileEntry) as first and the response object as second parameter.
 
 ```js
-cordova.plugin.http.downloadFile("https://google.com/", {
-  id: '12',
-  message: 'test'
-}, { Authorization: 'OAuth2: token' }, 'file:///somepicture.jpg', function(entry) {
-  // prints the filename
-  console.log(entry.name);
+cordova.plugin.http.downloadFile(
+  "https://google.com/",
+  { id: '12', message: 'test' },
+  { Authorization: 'OAuth2: token' },
+  'file:///somepicture.jpg',
+  // success callback
+  function(entry, response) {
+    // prints the filename
+    console.log(entry.name);
 
-  // prints the filePath
-  console.log(entry.fullPath);
-}, function(response) {
-  console.error(response.error);
-});
+    // prints the filePath
+    console.log(entry.fullPath);
+
+    // prints all header key/value pairs
+    Object.keys(response.headers).forEach(function (key) {
+      console.log(key, response.headers[key]);
+    });
+  },
+  // error callback
+  function(response) {
+    console.error(response.error);
+  }
+);
 ```
 
 ### abort<a name="abort"></a>
@@ -418,12 +453,15 @@ If the request is still in progress, the request's `failure` callback will be in
 var requestId = cordova.plugin.http.downloadFile("https://google.com/", {
   id: '12',
   message: 'test'
-}, { Authorization: 'OAuth2: token' }, 'file:///somepicture.jpg', function(entry) {
+}, { Authorization: 'OAuth2: token' }, 'file:///somepicture.jpg', function(entry, response) {
   // prints the filename
   console.log(entry.name);
 
   // prints the filePath
   console.log(entry.fullPath);
+
+  // prints the status code
+  console.log(response.status);
 }, function(response) {
   // if request was actually aborted, failure callback with status -8 will be invoked
   if(response.status === -8){
@@ -473,7 +511,6 @@ We made a few modifications to the networking libraries.
 This plugin uses amazing cloud services to maintain quality. CI Builds and E2E testing are powered by:
 
 * [GitHub Actions](https://github.com/features/actions)
-* [Travis CI](https://travis-ci.org/)
 * [BrowserStack](https://www.browserstack.com/)
 * [Sauce Labs](https://saucelabs.com/)
 * [httpbin.org](https://httpbin.org/)
@@ -485,7 +522,7 @@ First, install current package with `npm install` to fetch dev dependencies.
 
 Then, to execute Javascript tests:
 ```shell
-npm run testjs
+npm run test:js
 ```
 
 And, to execute E2E tests:
@@ -496,8 +533,8 @@ And, to execute E2E tests:
 - run
   -  updating client and server certificates, building test app, and running e2e tests
 ```shell
-npm run testandroid
-npm run testios
+npm run test:android
+npm run test:ios
 ```
 
 ## Contribute & Develop

@@ -1,4 +1,4 @@
-// AFSecurityPolicy.m
+// SM_AFSecurityPolicy.m
 // Copyright (c) 2011–2016 Alamofire Software Foundation ( http://alamofire.org/ )
 //
 // Permission is hereby granted, free of charge, to any person obtaining a copy
@@ -19,7 +19,7 @@
 // OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 // THE SOFTWARE.
 
-#import "AFSecurityPolicy.h"
+#import "SM_AFSecurityPolicy.h"
 
 #import <AssertMacros.h>
 
@@ -148,15 +148,25 @@ static NSArray * AFPublicKeyTrustChainForServerTrust(SecTrustRef serverTrust) {
 
 #pragma mark -
 
-@interface AFSecurityPolicy()
+@interface SM_AFSecurityPolicy()
 @property (readwrite, nonatomic, assign) AFSSLPinningMode SSLPinningMode;
 @property (readwrite, nonatomic, strong) NSSet *pinnedPublicKeys;
 @end
 
-@implementation AFSecurityPolicy
+@implementation SM_AFSecurityPolicy
+
++(BOOL) isRunningOnCapacitor {
+    return NSClassFromString(@"CAPPlugin") != nil;
+}
 
 + (NSSet *)certificatesInBundle:(NSBundle *)bundle {
-    NSArray *paths = [bundle pathsForResourcesOfType:@"cer" inDirectory:@"www/certificates"];
+    NSString* assetDir = @"www";
+    if([self isRunningOnCapacitor]) {
+        // we are running on capacitor and its assets dir is 'public'
+        assetDir = @"public";
+    }
+    
+    NSArray *paths = [bundle pathsForResourcesOfType:@"cer" inDirectory: [NSString stringWithFormat:@"%@/certificates", assetDir]];
     NSMutableSet *certificates = [NSMutableSet setWithCapacity:[paths count]];
 
     for (NSString *path in paths) {
@@ -171,7 +181,7 @@ static NSArray * AFPublicKeyTrustChainForServerTrust(SecTrustRef serverTrust) {
     static NSSet *_defaultPinnedCertificates = nil;
     static dispatch_once_t onceToken;
     dispatch_once(&onceToken, ^{
-        NSBundle *bundle = [NSBundle bundleForClass:[self class]];
+        NSBundle *bundle = [self isRunningOnCapacitor] ? [NSBundle mainBundle] : [NSBundle bundleForClass:[self class]];
         _defaultPinnedCertificates = [self certificatesInBundle:bundle];
     });
 
@@ -179,7 +189,7 @@ static NSArray * AFPublicKeyTrustChainForServerTrust(SecTrustRef serverTrust) {
 }
 
 + (instancetype)defaultPolicy {
-    AFSecurityPolicy *securityPolicy = [[self alloc] init];
+    SM_AFSecurityPolicy *securityPolicy = [[self alloc] init];
     securityPolicy.SSLPinningMode = AFSSLPinningModeNone;
 
     return securityPolicy;
@@ -190,7 +200,7 @@ static NSArray * AFPublicKeyTrustChainForServerTrust(SecTrustRef serverTrust) {
 }
 
 + (instancetype)policyWithPinningMode:(AFSSLPinningMode)pinningMode withPinnedCertificates:(NSSet *)pinnedCertificates {
-    AFSecurityPolicy *securityPolicy = [[self alloc] init];
+    SM_AFSecurityPolicy *securityPolicy = [[self alloc] init];
     securityPolicy.SSLPinningMode = pinningMode;
 
     [securityPolicy setPinnedCertificates:pinnedCertificates];
@@ -341,7 +351,7 @@ static NSArray * AFPublicKeyTrustChainForServerTrust(SecTrustRef serverTrust) {
 #pragma mark - NSCopying
 
 - (instancetype)copyWithZone:(NSZone *)zone {
-    AFSecurityPolicy *securityPolicy = [[[self class] allocWithZone:zone] init];
+    SM_AFSecurityPolicy *securityPolicy = [[[self class] allocWithZone:zone] init];
     securityPolicy.SSLPinningMode = self.SSLPinningMode;
     securityPolicy.allowInvalidCertificates = self.allowInvalidCertificates;
     securityPolicy.validatesDomainName = self.validatesDomainName;

@@ -14,7 +14,7 @@ const configs = {
   },
   localIosEmulator: {
     platformName: 'iOS',
-    platformVersion: '13.2',
+    platformVersion: '14.3',
     automationName: 'XCUITest',
     deviceName: 'iPhone 8',
     autoWebview: true,
@@ -22,7 +22,7 @@ const configs = {
   },
   localAndroidEmulator: {
     platformName: 'Android',
-    platformVersion: '5',
+    platformVersion: '9',
     deviceName: 'Android Emulator',
     autoWebview: true,
     fullReset: true,
@@ -32,27 +32,27 @@ const configs = {
   // testing on SauceLabs
   saucelabsIosDevice: {
     browserName: '',
-    'appium-version': '1.9.1',
+    'appium-version': '1.20.1',
     platformName: 'iOS',
-    platformVersion: '10.3',
+    platformVersion: '14.3',
     deviceName: 'iPhone 6',
     autoWebview: true,
     app: 'sauce-storage:HttpDemo.app.zip'
   },
   saucelabsIosEmulator: {
     browserName: '',
-    'appium-version': '1.9.1',
+    'appium-version': '1.20.1',
     platformName: 'iOS',
-    platformVersion: '10.3',
+    platformVersion: '14.3',
     deviceName: 'iPhone Simulator',
     autoWebview: true,
     app: 'sauce-storage:HttpDemo.app.zip'
   },
   saucelabsAndroidEmulator: {
     browserName: '',
-    'appium-version': '1.9.1',
+    'appium-version': '1.20.1',
     platformName: 'Android',
-    platformVersion: '5.1',
+    platformVersion: '8.0',
     deviceName: 'Android Emulator',
     autoWebview: true,
     app: 'sauce-storage:HttpDemo.apk'
@@ -60,18 +60,22 @@ const configs = {
 
   // testing on BrowserStack
   browserstackIosDevice: {
-    device: 'iPhone 7',
-    os_version: '10',
+    'appium-version': '1.22.0',
+    device: 'iPhone 12',
+    os_version: '14',
     project: 'HTTP Test App',
     autoWebview: true,
-    app: 'HttpTestAppAndroid'
+    app: 'HttpTestAppIos',
+    'browserstack.networkLogs': false
   },
   browserstackAndroidDevice: {
-    device: 'Google Nexus 6',
-    os_version: '5.0',
+    'appium-version': '1.22.0',
+    device: 'Samsung Galaxy S22 Ultra',
+    os_version: '12.0',
     project: 'HTTP Test App',
     autoWebview: true,
-    app: 'HttpTestAppAndroid'
+    app: 'HttpTestAppAndroid',
+    'browserstack.networkLogs': false
   }
 };
 
@@ -82,7 +86,7 @@ function getCaps(environment, os, runtime) {
   caps.name = `cordova-plugin-advanced-http (${os})`;
 
   return caps;
-};
+}
 
 function capitalize(text) {
   return text.charAt(0).toUpperCase() + text.slice(1).toLowerCase();

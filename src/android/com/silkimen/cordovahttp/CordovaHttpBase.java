@@ -35,13 +35,14 @@ abstract class CordovaHttpBase implements Runnable {
   protected String responseType;
   protected Object data;
   protected JSONObject headers;
-  protected int timeout;
+  protected int connectTimeout;
+  protected int readTimeout;
   protected boolean followRedirects;
   protected TLSConfiguration tlsConfiguration;
   protected CordovaObservableCallbackContext callbackContext;
 
-  public CordovaHttpBase(String method, String url, String serializer, Object data, JSONObject headers, int timeout,
-      boolean followRedirects, String responseType, TLSConfiguration tlsConfiguration,
+  public CordovaHttpBase(String method, String url, String serializer, Object data, JSONObject headers, int connectTimeout,
+      int readTimeout, boolean followRedirects, String responseType, TLSConfiguration tlsConfiguration,
       CordovaObservableCallbackContext callbackContext) {
 
     this.method = method;
@@ -49,20 +50,22 @@ abstract class CordovaHttpBase implements Runnable {
     this.serializer = serializer;
     this.data = data;
     this.headers = headers;
-    this.timeout = timeout;
+    this.connectTimeout = connectTimeout;
+    this.readTimeout = readTimeout;
     this.followRedirects = followRedirects;
     this.responseType = responseType;
     this.tlsConfiguration = tlsConfiguration;
     this.callbackContext = callbackContext;
   }
 
-  public CordovaHttpBase(String method, String url, JSONObject headers, int timeout, boolean followRedirects,
+  public CordovaHttpBase(String method, String url, JSONObject headers, int connectTimeout, int readTimeout, boolean followRedirects,
       String responseType, TLSConfiguration tlsConfiguration, CordovaObservableCallbackContext callbackContext) {
 
     this.method = method;
     this.url = url;
     this.headers = headers;
-    this.timeout = timeout;
+    this.connectTimeout = connectTimeout;
+    this.readTimeout = readTimeout;
     this.followRedirects = followRedirects;
     this.responseType = responseType;
     this.tlsConfiguration = tlsConfiguration;
@@ -128,8 +131,8 @@ abstract class CordovaHttpBase implements Runnable {
 
   protected void prepareRequest(HttpRequest request) throws JSONException, IOException {
     request.followRedirects(this.followRedirects);
-    request.readTimeout(this.timeout);
-    request.acceptCharset("UTF-8");
+    request.connectTimeout(this.connectTimeout);
+    request.readTimeout(this.readTimeout);
     request.uncompress(true);
 
     if (this.tlsConfiguration.getHostnameVerifier() != null) {
@@ -186,6 +189,12 @@ abstract class CordovaHttpBase implements Runnable {
         } else {
           request.part(name, fileNames.getString(i), types.getString(i), new ByteArrayInputStream(bytes));
         }
+      }
+
+      // prevent sending malformed empty multipart requests (#372)
+      if (buffers.length() == 0) {
+        request.contentType("multipart/form-data; boundary=00content0boundary00");
+        request.send("\r\n--00content0boundary00--\r\n");
       }
     }
   }

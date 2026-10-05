@@ -1,4 +1,4 @@
-// AFURLResponseSerialization.h
+// SM_AFURLResponseSerialization.h
 // Copyright (c) 2011–2016 Alamofire Software Foundation ( http://alamofire.org/ )
 //
 // Permission is hereby granted, free of charge, to any person obtaining a copy
@@ -25,11 +25,11 @@
 NS_ASSUME_NONNULL_BEGIN
 
 /**
- The `AFURLResponseSerialization` protocol is adopted by an object that decodes data into a more useful object representation, according to details in the server response. Response serializers may additionally perform validation on the incoming response and data.
+ The `SM_AFURLResponseSerialization` protocol is adopted by an object that decodes data into a more useful object representation, according to details in the server response. Response serializers may additionally perform validation on the incoming response and data.
 
  For example, a JSON response serializer may check for an acceptable status code (`2XX` range) and content type (`application/json`), decoding a valid JSON response into an object.
  */
-@protocol AFURLResponseSerialization <NSObject, NSSecureCoding, NSCopying>
+@protocol SM_AFURLResponseSerialization <NSObject, NSSecureCoding, NSCopying>
 
 /**
  The response object decoded from the data associated with a specified response.
@@ -49,11 +49,11 @@ NS_ASSUME_NONNULL_BEGIN
 #pragma mark -
 
 /**
- `AFHTTPResponseSerializer` conforms to the `AFURLRequestSerialization` & `AFURLResponseSerialization` protocols, offering a concrete base implementation of query string / URL form-encoded parameter serialization and default request headers, as well as response status code and content type validation.
+ `SM_AFHTTPResponseSerializer` conforms to the `SM_AFURLRequestSerialization` & `SM_AFURLResponseSerialization` protocols, offering a concrete base implementation of query string / URL form-encoded parameter serialization and default request headers, as well as response status code and content type validation.
 
- Any request or response serializer dealing with HTTP is encouraged to subclass `AFHTTPResponseSerializer` in order to ensure consistent default behavior.
+ Any request or response serializer dealing with HTTP is encouraged to subclass `SM_AFHTTPResponseSerializer` in order to ensure consistent default behavior.
  */
-@interface AFHTTPResponseSerializer : NSObject <AFURLResponseSerialization>
+@interface SM_AFHTTPResponseSerializer : NSObject <SM_AFURLResponseSerialization>
 
 - (instancetype)init;
 
@@ -104,15 +104,15 @@ NS_ASSUME_NONNULL_BEGIN
 
 
 /**
- `AFJSONResponseSerializer` is a subclass of `AFHTTPResponseSerializer` that validates and decodes JSON responses.
+ `SM_AFJSONResponseSerializer` is a subclass of `SM_AFHTTPResponseSerializer` that validates and decodes JSON responses.
 
- By default, `AFJSONResponseSerializer` accepts the following MIME types, which includes the official standard, `application/json`, as well as other commonly-used types:
+ By default, `SM_AFJSONResponseSerializer` accepts the following MIME types, which includes the official standard, `application/json`, as well as other commonly-used types:
 
  - `application/json`
  - `text/json`
  - `text/javascript`
  */
-@interface AFJSONResponseSerializer : AFHTTPResponseSerializer
+@interface SM_AFJSONResponseSerializer : SM_AFHTTPResponseSerializer
 
 - (instancetype)init;
 
@@ -138,14 +138,14 @@ NS_ASSUME_NONNULL_BEGIN
 #pragma mark -
 
 /**
- `AFXMLParserResponseSerializer` is a subclass of `AFHTTPResponseSerializer` that validates and decodes XML responses as an `NSXMLParser` objects.
+ `SM_AFXMLParserResponseSerializer` is a subclass of `SM_AFHTTPResponseSerializer` that validates and decodes XML responses as an `NSXMLParser` objects.
 
- By default, `AFXMLParserResponseSerializer` accepts the following MIME types, which includes the official standard, `application/xml`, as well as other commonly-used types:
+ By default, `SM_AFXMLParserResponseSerializer` accepts the following MIME types, which includes the official standard, `application/xml`, as well as other commonly-used types:
 
  - `application/xml`
  - `text/xml`
  */
-@interface AFXMLParserResponseSerializer : AFHTTPResponseSerializer
+@interface SM_AFXMLParserResponseSerializer : SM_AFHTTPResponseSerializer
 
 @end
 
@@ -154,14 +154,14 @@ NS_ASSUME_NONNULL_BEGIN
 #ifdef __MAC_OS_X_VERSION_MIN_REQUIRED
 
 /**
- `AFXMLDocumentResponseSerializer` is a subclass of `AFHTTPResponseSerializer` that validates and decodes XML responses as an `NSXMLDocument` objects.
+ `AFXMLDocumentResponseSerializer` is a subclass of `SM_AFHTTPResponseSerializer` that validates and decodes XML responses as an `NSXMLDocument` objects.
 
  By default, `AFXMLDocumentResponseSerializer` accepts the following MIME types, which includes the official standard, `application/xml`, as well as other commonly-used types:
 
  - `application/xml`
  - `text/xml`
  */
-@interface AFXMLDocumentResponseSerializer : AFHTTPResponseSerializer
+@interface AFXMLDocumentResponseSerializer : SM_AFHTTPResponseSerializer
 
 - (instancetype)init;
 
@@ -184,13 +184,13 @@ NS_ASSUME_NONNULL_BEGIN
 #pragma mark -
 
 /**
- `AFPropertyListResponseSerializer` is a subclass of `AFHTTPResponseSerializer` that validates and decodes XML responses as an `NSXMLDocument` objects.
+ `SM_AFPropertyListResponseSerializer` is a subclass of `SM_AFHTTPResponseSerializer` that validates and decodes XML responses as an `NSXMLDocument` objects.
 
- By default, `AFPropertyListResponseSerializer` accepts the following MIME types:
+ By default, `SM_AFPropertyListResponseSerializer` accepts the following MIME types:
 
  - `application/x-plist`
  */
-@interface AFPropertyListResponseSerializer : AFHTTPResponseSerializer
+@interface SM_AFPropertyListResponseSerializer : SM_AFHTTPResponseSerializer
 
 - (instancetype)init;
 
@@ -218,9 +218,9 @@ NS_ASSUME_NONNULL_BEGIN
 #pragma mark -
 
 /**
- `AFImageResponseSerializer` is a subclass of `AFHTTPResponseSerializer` that validates and decodes image responses.
+ `SM_AFImageResponseSerializer` is a subclass of `SM_AFHTTPResponseSerializer` that validates and decodes image responses.
 
- By default, `AFImageResponseSerializer` accepts the following MIME types, which correspond to the image formats supported by UIImage or NSImage:
+ By default, `SM_AFImageResponseSerializer` accepts the following MIME types, which correspond to the image formats supported by UIImage or NSImage:
 
  - `image/tiff`
  - `image/jpeg`
@@ -233,7 +233,7 @@ NS_ASSUME_NONNULL_BEGIN
  - `image/x-xbitmap`
  - `image/x-win-bitmap`
  */
-@interface AFImageResponseSerializer : AFHTTPResponseSerializer
+@interface SM_AFImageResponseSerializer : SM_AFHTTPResponseSerializer
 
 #if TARGET_OS_IOS || TARGET_OS_TV || TARGET_OS_WATCH
 /**
@@ -252,21 +252,21 @@ NS_ASSUME_NONNULL_BEGIN
 #pragma mark -
 
 /**
- `AFCompoundSerializer` is a subclass of `AFHTTPResponseSerializer` that delegates the response serialization to the first `AFHTTPResponseSerializer` object that returns an object for `responseObjectForResponse:data:error:`, falling back on the default behavior of `AFHTTPResponseSerializer`. This is useful for supporting multiple potential types and structures of server responses with a single serializer.
+ `AFCompoundSerializer` is a subclass of `SM_AFHTTPResponseSerializer` that delegates the response serialization to the first `SM_AFHTTPResponseSerializer` object that returns an object for `responseObjectForResponse:data:error:`, falling back on the default behavior of `SM_AFHTTPResponseSerializer`. This is useful for supporting multiple potential types and structures of server responses with a single serializer.
  */
-@interface AFCompoundResponseSerializer : AFHTTPResponseSerializer
+@interface SM_AFCompoundResponseSerializer : SM_AFHTTPResponseSerializer
 
 /**
  The component response serializers.
  */
-@property (readonly, nonatomic, copy) NSArray <id<AFURLResponseSerialization>> *responseSerializers;
+@property (readonly, nonatomic, copy) NSArray <id<SM_AFURLResponseSerialization>> *responseSerializers;
 
 /**
  Creates and returns a compound serializer comprised of the specified response serializers.
 
- @warning Each response serializer specified must be a subclass of `AFHTTPResponseSerializer`, and response to `-validateResponse:data:error:`.
+ @warning Each response serializer specified must be a subclass of `SM_AFHTTPResponseSerializer`, and response to `-validateResponse:data:error:`.
  */
-+ (instancetype)compoundSerializerWithResponseSerializers:(NSArray <id<AFURLResponseSerialization>> *)responseSerializers;
++ (instancetype)compoundSerializerWithResponseSerializers:(NSArray <id<SM_AFURLResponseSerialization>> *)responseSerializers;
 
 @end
 
@@ -279,40 +279,40 @@ NS_ASSUME_NONNULL_BEGIN
 
  The following error domain is predefined.
 
- - `NSString * const AFURLResponseSerializationErrorDomain`
+ - `NSString * const SM_AFURLResponseSerializationErrorDomain`
 
  ### Constants
 
- `AFURLResponseSerializationErrorDomain`
- AFURLResponseSerializer errors. Error codes for `AFURLResponseSerializationErrorDomain` correspond to codes in `NSURLErrorDomain`.
+ `SM_AFURLResponseSerializationErrorDomain`
+ AFURLResponseSerializer errors. Error codes for `SM_AFURLResponseSerializationErrorDomain` correspond to codes in `NSURLErrorDomain`.
  */
-FOUNDATION_EXPORT NSString * const AFURLResponseSerializationErrorDomain;
+FOUNDATION_EXPORT NSString * const SM_AFURLResponseSerializationErrorDomain;
 
 /**
  ## User info dictionary keys
 
  These keys may exist in the user info dictionary, in addition to those defined for NSError.
 
- - `NSString * const AFNetworkingOperationFailingURLResponseErrorKey`
- - `NSString * const AFNetworkingOperationFailingURLResponseDataErrorKey`
+ - `NSString * const SM_AFNetworkingOperationFailingURLResponseErrorKey`
+ - `NSString * const SM_AFNetworkingOperationFailingURLResponseDataErrorKey`
 
  ### Constants
 
- `AFNetworkingOperationFailingURLResponseErrorKey`
- The corresponding value is an `NSURLResponse` containing the response of the operation associated with an error. This key is only present in the `AFURLResponseSerializationErrorDomain`.
+ `SM_AFNetworkingOperationFailingURLResponseErrorKey`
+ The corresponding value is an `NSURLResponse` containing the response of the operation associated with an error. This key is only present in the `SM_AFURLResponseSerializationErrorDomain`.
 
- `AFNetworkingOperationFailingURLResponseDataErrorKey`
- The corresponding value is an `NSData` containing the original data of the operation associated with an error. This key is only present in the `AFURLResponseSerializationErrorDomain`.
+ `SM_AFNetworkingOperationFailingURLResponseDataErrorKey`
+ The corresponding value is an `NSData` containing the original data of the operation associated with an error. This key is only present in the `SM_AFURLResponseSerializationErrorDomain`.
  */
-FOUNDATION_EXPORT NSString * const AFNetworkingOperationFailingURLResponseErrorKey;
+FOUNDATION_EXPORT NSString * const SM_AFNetworkingOperationFailingURLResponseErrorKey;
 
-FOUNDATION_EXPORT NSString * const AFNetworkingOperationFailingURLResponseDataErrorKey;
+FOUNDATION_EXPORT NSString * const SM_AFNetworkingOperationFailingURLResponseDataErrorKey;
 
 /**
-`AFNetworkingOperationFailingURLResponseBodyErrorKey`
+`SM_AFNetworkingOperationFailingURLResponseBodyErrorKey`
 The corresponding value is an `NSString` containing the decoded error message.
  */
 
-FOUNDATION_EXPORT NSString * const AFNetworkingOperationFailingURLResponseBodyErrorKey;
+FOUNDATION_EXPORT NSString * const SM_AFNetworkingOperationFailingURLResponseBodyErrorKey;
 
 NS_ASSUME_NONNULL_END

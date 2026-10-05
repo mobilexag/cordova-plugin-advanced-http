@@ -151,23 +151,27 @@ function setHeaders(xhr, headers) {
 }
 
 function sendRequest(method, withData, opts, success, failure) {
-  var data, serializer, headers, timeout, followRedirect, responseType, reqId;
+  var data, serializer, headers, readTimeout, followRedirect, responseType, reqId;
   var url = opts[0];
 
   if (withData) {
     data = opts[1];
     serializer = opts[2];
     headers = opts[3];
-    timeout = opts[4];
-    followRedirect = opts[5];
-    responseType = opts[6];
-    reqId = opts[7];
+    // connect timeout not applied
+    // connectTimeout = opts[4];
+    readTimeout = opts[5];
+    followRedirect = opts[6];
+    responseType = opts[7];
+    reqId = opts[8];
   } else {
     headers = opts[1];
-    timeout = opts[2];
-    followRedirect = opts[3];
-    responseType = opts[4];
-    reqId = opts[5];
+    // connect timeout not applied
+    // connectTimeout = opts[2];
+    readTimeout = opts[3];
+    followRedirect = opts[4];
+    responseType = opts[5];
+    reqId = opts[6];
   }
 
   var onSuccess = injectRequestIdHandler(reqId, success);
@@ -189,7 +193,7 @@ function sendRequest(method, withData, opts, success, failure) {
   }
 
   switch (serializer) {
-    case 'json':
+    case 'json': {
       setDefaultContentType(headers, 'application/json; charset=utf8');
       processedData = serializeJsonData(data);
 
@@ -198,18 +202,21 @@ function sendRequest(method, withData, opts, success, failure) {
       }
 
       break;
+    }
 
-    case 'utf8':
+    case 'utf8': {
       setDefaultContentType(headers, 'text/plain; charset=utf8');
       processedData = data.text;
       break;
+    }
 
-    case 'urlencoded':
+    case 'urlencoded': {
       setDefaultContentType(headers, 'application/x-www-form-urlencoded');
       processedData = serializeParams(data);
       break;
+    }
 
-    case 'multipart':
+    case 'multipart': {
       const contentType = getHeaderValue(headers, 'Content-Type');
 
       // intentionally don't set a default content type
@@ -220,17 +227,31 @@ function sendRequest(method, withData, opts, success, failure) {
 
       processedData = processMultipartData(data);
       break;
+    }
 
-    case 'raw':
+    case 'raw': {
       setDefaultContentType(headers, 'application/octet-stream');
       processedData = data;
       break;
+    }
   }
 
   // requesting text instead of JSON because it's parsed in the response handler
   xhr.responseType = responseType === 'json' ? 'text' : responseType;
-  xhr.timeout = timeout * 1000;
-  setHeaders(xhr, headers);
+
+  // we can't set connect timeout and read timeout separately on browser platform
+  xhr.timeout = readTimeout * 1000;
+
+  try {
+    setHeaders(xhr, headers);
+  } catch(error) {
+    return onFail({
+      status: -1,
+      error: error,
+      url: url,
+      headers: headers
+    });
+  }
 
   xhr.onerror = function () {
     return onFail(createXhrFailureObject(xhr));
@@ -267,7 +288,7 @@ function sendRequest(method, withData, opts, success, failure) {
   xhr.send(processedData);
 }
 
-function abort(opts, success, failure) {
+function abort(opts, success) {
   var reqId = opts[0];
   var result = false;
 
@@ -302,19 +323,19 @@ var browserInterface = {
   abort: function (success, failure, opts) {
     return abort(opts, success, failure);
   },
-  uploadFile: function (success, failure, opts) {
+  uploadFile: function (success, failure) {
     return failure('advanced-http: function "uploadFile" not supported on browser platform');
   },
-  uploadFiles: function (success, failure, opts) {
+  uploadFiles: function (success, failure) {
     return failure('advanced-http: function "uploadFiles" not supported on browser platform');
   },
-  downloadFile: function (success, failure, opts) {
+  downloadFile: function (success, failure) {
     return failure('advanced-http: function "downloadFile" not supported on browser platform');
   },
-  setServerTrustMode: function (success, failure, opts) {
+  setServerTrustMode: function (success, failure) {
     return failure('advanced-http: function "setServerTrustMode" not supported on browser platform');
   },
-  setClientAuthMode: function (success, failure, opts) {
+  setClientAuthMode: function (success, failure) {
     return failure('advanced-http: function "setClientAuthMode" not supported on browser platform');
   }
 };
